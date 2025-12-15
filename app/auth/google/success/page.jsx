@@ -1,22 +1,10 @@
-"use client";
+import { Suspense } from "react";
+import GoogleSuccessClient from "../../../auth/google/success/GoogleSuccessClient";
 
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-
-export default function GoogleSuccessPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const token = searchParams.get("token");
-
-    if (token) {
-      localStorage.setItem("authToken", token);
-      router.replace("/dashboard");
-    } else {
-      router.replace("/Login");
-    }
-  }, [router, searchParams]);
-
-  return <div>Logging you in...</div>;
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <GoogleSuccessClient />
+    </Suspense>
+  );
 }
