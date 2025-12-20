@@ -3,7 +3,6 @@ import Image from "next/image";
 import {
   HiOutlineBriefcase,
   HiOutlineShare,
-  HiPower,
   HiOutlineUserAdd,
 } from "react-icons/hi";
 
@@ -43,7 +42,6 @@ export default function RoomPage() {
           <HiOutlineBriefcase />
           <HiOutlineShare />
           <HiOutlinePower />
-          <HiPower />
         </div>
       </div>
 
