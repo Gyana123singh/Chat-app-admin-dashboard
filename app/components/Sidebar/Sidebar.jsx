@@ -50,6 +50,11 @@ function Sidebar() {
       path: "/revenueAnalytics",
       image: "/Chart.png",
     },
+    {
+      name: "create room",
+      path: "/create-room",
+      image: "/Chart.png",
+    },
     { name: "Settings", path: "/setting", image: "/Folder.png" },
     // { name: "Logout", path: "/logout", image: "/Setting.png" },
   ];
