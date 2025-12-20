@@ -42,7 +42,7 @@ export default function JoinedPage() {
             className="rounded-full"
           />
 
-          <button onClick={() => router.push("/create-room")}>
+          <button onClick={() => router.push("/createRooms")}>
             <h3 className="font-semibold text-base">Create My Room</h3>
             <p className="text-sm text-gray-400">
               Share everything with friends
