@@ -52,7 +52,7 @@ function Sidebar() {
     },
     {
       name: "create room",
-      path: "/create-room",
+      path: "/createRoom",
       image: "/Chart.png",
     },
     { name: "Settings", path: "/setting", image: "/Folder.png" },
