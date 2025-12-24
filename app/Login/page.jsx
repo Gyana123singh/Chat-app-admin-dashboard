@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import axios from "axios";
 
-import { adminApi } from "../utils/api/authApi";
+// import { adminApi } from "../utils/api/authApi";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +20,7 @@ export default function Login() {
   const router = useRouter();
 
   /* ---------------- EMAIL LOGIN ---------------- */
+
   const handleLogin = async () => {
     try {
       if (!email || !password) {
@@ -27,11 +28,34 @@ export default function Login() {
         return;
       }
 
-      const data = await adminApi.loginAdmin(email, password);
-      localStorage.setItem("adminAuthToken", data.token);
-      alert("Email Login Success");
+      // 🔹 MANUAL API CALL
+      const res = await axios.post(
+        "https://chat-app-1-qvl9.onrender.com/api/admin/login",
+        {
+          email,
+          password,
+        }
+      );
+
+      const data = res.data;
+
+      // 🔹 SAVE TOKEN
+      localStorage.setItem("authToken", data.token);
+      // ✅ SAVE USER (VERY IMPORTANT)
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.user._id,
+          username: data.user.username,
+          email: data.user.email,
+          role: data.user.role,
+        })
+      );
+      // 🔹 REDIRECT AFTER LOGIN
+      router.push("/dashboard");
     } catch (error) {
       console.error("Login Failed:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Login failed");
     }
   };
 

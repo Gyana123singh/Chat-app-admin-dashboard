@@ -1,11 +1,14 @@
 "use client";
+
 import Image from "next/image";
 import { HiMenuAlt2, HiGlobeAlt, HiSearch } from "react-icons/hi";
 import { HiSignal } from "react-icons/hi2";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-const router = useRouter();
 export default function JoinedPage() {
+  const router = useRouter(); // ✅ FIXED (inside component)
+
   return (
     <div className="max-w-[420px] mx-auto min-h-screen bg-white pb-20">
       {/* TOP NAV */}
@@ -33,26 +36,28 @@ export default function JoinedPage() {
           Mine
         </span>
 
-        <div className="flex items-center gap-4">
-          <Image
-            src="/logo.png"
-            alt="Logo"
-            width={48}
-            height={48}
-            className="rounded-full"
-          />
+        <Link href="/createRoom">
+          <div className="flex items-center gap-4">
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={48}
+              height={48}
+              className="rounded-full"
+            />
 
-          <button onClick={() => router.push("/createRooms")}>
-            <h3 className="font-semibold text-base">Create My Room</h3>
-            <p className="text-sm text-gray-400">
-              Share everything with friends
-            </p>
-          </button>
+            <button>
+              <h3 className="font-semibold text-base">Create My Room</h3>
+              <p className="text-sm text-gray-400">
+                Share everything with friends
+              </p>
+            </button>
 
-          <button className="ml-auto w-10 h-10 rounded-full bg-green-500 text-white text-2xl flex items-center justify-center">
-            +
-          </button>
-        </div>
+            <button className="ml-auto w-10 h-10 rounded-full bg-green-500 text-white text-2xl flex items-center justify-center">
+              +
+            </button>
+          </div>
+        </Link>
       </div>
 
       {/* JOINED TITLE */}

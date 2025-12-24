@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instanceApi = axios.create({
-  baseURL: "http://72.60.103.18:8080",
+  baseURL: "https://chat-app-1-qvl9.onrender.com",
   headers: {
     "Content-Type": "application/json",
   },
@@ -10,7 +10,7 @@ const instanceApi = axios.create({
 instanceApi.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     if (!config.url.includes("/admin/login")) {
-      const token = localStorage.getItem("adminAuthToken");
+      const token = localStorage.getItem("authToken");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
