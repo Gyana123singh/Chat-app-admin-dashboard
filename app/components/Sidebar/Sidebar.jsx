@@ -37,6 +37,7 @@ function Sidebar() {
   const menuItems = [
     { name: "Dashboard", path: "/dashboard", image: "/User.png" },
     { name: "User Management", path: "/userManagement", image: "/User.png" },
+    { name: "Help Line Rooms", path: "/helpLine", image: "/Folder.png" },
     { name: "Gifts Management", path: "/giftsManagement", image: "/User.png" },
     { name: "Chat Reports", path: "/chatReport", image: "/Calendar.png" },
     { name: "Coin Management", path: "/coinManagement", image: "/Chart.png" },

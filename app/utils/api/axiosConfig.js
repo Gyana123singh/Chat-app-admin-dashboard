@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instanceApi = axios.create({
-  baseURL: "https://chat-app-1-qvl9.onrender.com",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://chat-app-1-qvl9.onrender.com",
   headers: {
     "Content-Type": "application/json",
   },

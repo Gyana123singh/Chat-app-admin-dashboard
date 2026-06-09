@@ -71,14 +71,35 @@ export default function RoomPage() {
     if (joined || !roomId) return;
 
     const token = localStorage.getItem("authToken");
-    const user = JSON.parse(localStorage.getItem("user"));
+    let password = null;
 
-    /* REST JOIN */
-    await axios.post(
-      `http://localhost:5000/api/rooms/${roomId}/join`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    try {
+      /* REST JOIN */
+      await axios.post(
+        `http://localhost:5000/api/rooms/${roomId}/join`,
+        { password },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      if (err.response?.data?.isLocked) {
+        const enteredPass = prompt("Enter Room Password:");
+        if (!enteredPass) return;
+        password = enteredPass;
+        try {
+          await axios.post(
+            `http://localhost:5000/api/rooms/${roomId}/join`,
+            { password },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        } catch (innerErr) {
+          alert(innerErr.response?.data?.message || "Failed to join room");
+          return;
+        }
+      } else {
+        alert(err.response?.data?.message || "Failed to join room");
+        return;
+      }
+    }
 
     /* SOCKET CONNECT */
     socketRef.current = io(SOCKET_URL, {
@@ -89,7 +110,7 @@ export default function RoomPage() {
     registerRoomEvents(socketRef.current, setParticipants);
 
     socketRef.current.on("connect", async () => {
-      socketRef.current.emit("room:join", { roomId });
+      socketRef.current.emit("room:join", { roomId, password });
 
       localStreamRef.current = await navigator.mediaDevices.getUserMedia({
         audio: true,
