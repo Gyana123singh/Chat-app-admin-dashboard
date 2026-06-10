@@ -11,6 +11,7 @@ import {
   HiOutlineShare,
   HiOutlineMicrophone,
   HiOutlineVolumeUp,
+  HiOutlineVolumeOff,
 } from "react-icons/hi";
 import { HiOutlineFaceSmile } from "react-icons/hi2";
 import { BsGiftFill } from "react-icons/bs";
@@ -28,6 +29,7 @@ export default function RoomPage() {
   const [participants, setParticipants] = useState([]);
   const [joined, setJoined] = useState(false);
   const [micOn, setMicOn] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(false);
 
   const socketRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -135,6 +137,14 @@ export default function RoomPage() {
     setMicOn(!micOn);
   };
 
+  const toggleSound = () => {
+    const nextMuted = !soundMuted;
+    setSoundMuted(nextMuted);
+    if (socketRef.current) {
+      socketRef.current.emit("sound:state", nextMuted);
+    }
+  };
+
   if (!room) return null;
 
   return (
@@ -178,7 +188,13 @@ export default function RoomPage() {
         <button onClick={toggleMic}>
           <HiOutlineMicrophone />
         </button>
-        <HiOutlineVolumeUp />
+        <button onClick={toggleSound}>
+          {soundMuted ? (
+            <HiOutlineVolumeOff className="text-red-400" />
+          ) : (
+            <HiOutlineVolumeUp className="text-green-400" />
+          )}
+        </button>
         <HiOutlineFaceSmile />
         <BsGiftFill />
       </div>
