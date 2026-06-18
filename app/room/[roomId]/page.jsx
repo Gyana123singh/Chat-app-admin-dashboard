@@ -35,6 +35,10 @@ export default function RoomPage() {
   const socketRef = useRef(null);
   const localStreamRef = useRef(null);
   const peersRef = useRef({});
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false);
 
   /* ================= FETCH ROOM ================= */
   useEffect(() => {
@@ -70,63 +74,85 @@ export default function RoomPage() {
   }, []);
 
   /* ================= JOIN ROOM ================= */
-  const handleJoin = async () => {
-    if (joined || !roomId) return;
-
-    const token = localStorage.getItem("authToken");
-    let password = null;
-
-    try {
-      /* REST JOIN */
-      await axios.post(
-        `http://localhost:5000/api/rooms/${roomId}/join`,
-        { password },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (err) {
-      if (err.response?.data?.isLocked) {
-        const enteredPass = prompt("Enter Room Password:");
-        if (!enteredPass) return;
-        password = enteredPass;
-        try {
-          await axios.post(
-            `http://localhost:5000/api/rooms/${roomId}/join`,
-            { password },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-        } catch (innerErr) {
-          alert(innerErr.response?.data?.message || "Failed to join room");
-          return;
-        }
-      } else {
-        alert(err.response?.data?.message || "Failed to join room");
-        return;
-      }
-    }
-
-    /* SOCKET CONNECT */
+  const connectSocket = async (passwordToUse = null) => {
     socketRef.current = io(SOCKET_URL, {
       transports: ["websocket"],
-      auth: { token },
+      auth: { token: localStorage.getItem("authToken") },
     });
 
     registerRoomEvents(socketRef.current, setParticipants, setLockedSeats);
 
     socketRef.current.on("connect", async () => {
-      socketRef.current.emit("room:join", { roomId, password });
+      socketRef.current.emit("room:join", { roomId, password: passwordToUse });
 
-      localStreamRef.current = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
+      try {
+        localStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setMicOn(true);
+      } catch (e) {
+        localStreamRef.current = null;
+      }
 
       setJoined(true);
-      setMicOn(true);
     });
 
     /* USERS IN ROOM */
     socketRef.current.on("room:users", (users) => {
       setParticipants(users);
     });
+  };
+
+  const handleJoin = async () => {
+    if (joined || !roomId) return;
+    const token = localStorage.getItem("authToken");
+
+    try {
+      /* REST JOIN (no password) */
+      await axios.post(
+        `http://localhost:5000/api/rooms/${roomId}/join`,
+        { password: null },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      await connectSocket(null);
+    } catch (err) {
+      if (err.response?.data?.isLocked) {
+        setPasswordInput("");
+        setPasswordError("");
+        setShowPasswordPrompt(true);
+        return;
+      }
+      alert(err.response?.data?.message || "Failed to join room");
+      return;
+    }
+  };
+
+  const submitPasswordAndJoin = async () => {
+    setPasswordError("");
+    if (!passwordInput) {
+      setPasswordError("Password is required");
+      return;
+    }
+    if (String(passwordInput).length !== 6) {
+      setPasswordError("Password must be exactly 6 characters");
+      return;
+    }
+
+    setPasswordSubmitting(true);
+    const token = localStorage.getItem("authToken");
+    try {
+      await axios.post(
+        `http://localhost:5000/api/rooms/${roomId}/join`,
+        { password: passwordInput },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setShowPasswordPrompt(false);
+      await connectSocket(passwordInput);
+    } catch (err) {
+      setPasswordError(err.response?.data?.message || "Incorrect room password");
+    } finally {
+      setPasswordSubmitting(false);
+    }
   };
 
   /* ================= MIC ================= */
@@ -205,6 +231,36 @@ export default function RoomPage() {
             });
             return seatsArr;
           })()}
+        </div>
+      )}
+
+      {/* PASSWORD PROMPT MODAL */}
+      {showPasswordPrompt && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+          <div className="bg-white text-black p-6 rounded shadow max-w-sm w-full">
+            <h3 className="font-semibold mb-2">Enter Room Password</h3>
+            <p className="text-sm text-gray-600 mb-4">Password must be exactly 6 characters.</p>
+            <input
+              type="text"
+              maxLength={6}
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              className="w-full border px-3 py-2 mb-2"
+            />
+            {passwordError && <p className="text-red-600 text-sm mb-2">{passwordError}</p>}
+            <div className="flex gap-2 justify-end">
+              <button className="px-3 py-1" onClick={() => setShowPasswordPrompt(false)} disabled={passwordSubmitting}>
+                Cancel
+              </button>
+              <button
+                className="bg-green-600 text-white px-3 py-1 rounded"
+                onClick={submitPasswordAndJoin}
+                disabled={passwordSubmitting}
+              >
+                {passwordSubmitting ? "Joining..." : "Join"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
