@@ -1,4 +1,4 @@
-export const registerRoomEvents = (socket, setParticipants) => {
+export const registerRoomEvents = (socket, setParticipants, setLockedSeats) => {
   if (!socket) return () => {};
 
   /* =========================
@@ -75,6 +75,55 @@ export const registerRoomEvents = (socket, setParticipants) => {
   socket.off("gift:received");
   socket.on("gift:received", (gift) => {
     console.log("Gift:", gift);
+  });
+
+  // SEAT EVENTS
+  socket.off("room:seat:taken");
+  socket.on("room:seat:taken", ({ userId, displayId, seatNumber }) => {
+    setParticipants((prev) => {
+      const exists = prev.some((u) => u.id === userId);
+      if (exists) {
+        return prev.map((u) =>
+          u.id === userId
+            ? { ...u, isWatcher: false, seatIndex: seatNumber - 1, displayId: displayId || u.displayId }
+            : u
+        );
+      }
+      return [
+        ...prev,
+        {
+          id: userId,
+          username: displayId || "User",
+          displayId: displayId || null,
+          isWatcher: false,
+          seatIndex: seatNumber - 1,
+        },
+      ];
+    });
+  });
+
+  socket.off("room:seat:removed");
+  socket.on("room:seat:removed", ({ userId, seatNumber }) => {
+    setParticipants((prev) => prev.map((u) => (u.id === userId ? { ...u, isWatcher: true, seatIndex: -1 } : u)));
+  });
+
+  socket.off("room:seats:lockedAll");
+  socket.on("room:seats:lockedAll", ({ lockedSeats }) => {
+    if (typeof setLockedSeats === "function") setLockedSeats(lockedSeats || []);
+  });
+
+  socket.off("room:seat:locked");
+  socket.on("room:seat:locked", ({ seatNumber }) => {
+    if (typeof setLockedSeats === "function") {
+      setLockedSeats((prev) => Array.from(new Set([...(prev || []), seatNumber])));
+    }
+  });
+
+  socket.off("room:seat:unlocked");
+  socket.on("room:seat:unlocked", ({ seatNumber }) => {
+    if (typeof setLockedSeats === "function") {
+      setLockedSeats((prev) => (prev || []).filter((s) => s !== seatNumber));
+    }
   });
 
   /* =========================

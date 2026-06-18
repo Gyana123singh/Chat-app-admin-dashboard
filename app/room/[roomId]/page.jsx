@@ -27,6 +27,7 @@ export default function RoomPage() {
 
   const [room, setRoom] = useState(null);
   const [participants, setParticipants] = useState([]);
+  const [lockedSeats, setLockedSeats] = useState([]);
   const [joined, setJoined] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [soundMuted, setSoundMuted] = useState(false);
@@ -109,7 +110,7 @@ export default function RoomPage() {
       auth: { token },
     });
 
-    registerRoomEvents(socketRef.current, setParticipants);
+    registerRoomEvents(socketRef.current, setParticipants, setLockedSeats);
 
     socketRef.current.on("connect", async () => {
       socketRef.current.emit("room:join", { roomId, password });
@@ -174,12 +175,36 @@ export default function RoomPage() {
       {/* PARTICIPANTS */}
       {joined && (
         <div className="grid grid-cols-5 gap-4 p-4">
-          {participants.map((u, i) => (
-            <div key={i} className="text-center">
-              <Image src="/avatar.png" width={48} height={48} alt="user" />
-              <p className="text-xs">{u.username}</p>
-            </div>
-          ))}
+          {(() => {
+            const seatCount = room?.seatCount || 10;
+            const seatsArr = new Array(seatCount).fill(null).map((_, idx) => {
+              const user = participants.find((p) => p.seatIndex === idx);
+              const locked = lockedSeats.includes(idx + 1);
+              return (
+                <div
+                  key={idx}
+                  className="text-center p-2 border rounded relative"
+                  onClick={() => {
+                    if (!socketRef.current) return;
+                    if (locked) {
+                      alert("This seat is locked");
+                      return;
+                    }
+                    socketRef.current.emit("room:takeSeat", { roomId, seatNumber: idx + 1 });
+                  }}
+                >
+                  <Image src="/avatar.png" width={48} height={48} alt="user" />
+                  <p className="text-xs">{user ? user.username : `Seat ${idx + 1}`}</p>
+                  {locked && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-yellow-300">
+                      Locked
+                    </div>
+                  )}
+                </div>
+              );
+            });
+            return seatsArr;
+          })()}
         </div>
       )}
 
